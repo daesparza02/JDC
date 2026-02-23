@@ -1,0 +1,5 @@
+package ast;
+
+public enum NodeKind {
+  EXPRESION, TIPO, INSTRUCCION, PROGRAMA, EXPRESION_ACCESO_ARRAY, PARAMETRO;
+}
