@@ -1,0 +1,11 @@
+
+fun suma(num a; num b) dev num {
+	ret 355.
+}
+
+
+fun startPls () dev num {
+	num resultado <- suma(3; 5).
+	ret 0.
+}
+

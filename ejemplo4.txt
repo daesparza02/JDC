@@ -1,0 +1,58 @@
+
+fun suma(num a; num b) dev num {
+	ret 355.
+}
+
+
+fun startPls () dev num {
+	array(num, 2) a <- [1,2].
+	#array(num, 2,2) a3 <- [[1,2],[3,4]].
+	num i <- 6.
+	check(i<6){
+	  num p <- 35.
+	}
+	othercheck(i eq 7){
+	  num otro <- 9.
+	}
+	other{
+	  num c<-12.
+	}
+	#num k <- a[1].
+	num k <- i + 5.
+	num x <- k * 2.
+	num y <- k / 2.
+	num w <- y % 10.
+	num z <- k - 1.
+	tof p <- 11 < 11.
+	tof v <- 11 <= 11.
+	tof u <- w eq y.
+	tof t <- w neq y.
+	tof s <- not t.
+	tof r <- s and t.
+	tof q <- s or t.
+
+	num o <- 0.
+	during(o neq 17){
+		o <- o + 1.
+	}
+	num m <- 0.
+	check(m eq 0){
+	cycle(num n <- 0, n < 14, n <- n + 1){
+		m <- m + 1.
+		check(m eq 4){
+			num aaa <- 98.
+		}
+	}
+	}
+	num resultado <- suma(3; 5).
+	num l1 <- resultado.
+	num l2 <- resultado.
+	num l3 <- resultado.
+num l4<- 2.
+num l5 <- 2.
+num l6 <- 2.
+num l7<- 2.
+num l8 <- 2.
+	ret 432.
+}
+

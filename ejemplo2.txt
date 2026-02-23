@@ -1,0 +1,70 @@
+FINAL tof aux <- tru .
+FINAL num a1 <- 1.
+typedef a := array(num, 2).
+
+dec prueba.
+/*reg nombreRegistro {
+		tof campo1 .
+		num campo2 .
+}.*/
+/*entity clase{
+	tof falacia.
+	#array(tof, 2) ea.
+	#array(num, 3) a2.
+	array(num, 2,2) a3 <- [[1,1],[1,1]].
+	constructor(){
+		falacia <- tru.
+		#ea <- [2,3].
+		#at <- [[tru, tru, tru], [fols, tru, fols]].
+	}
+	fun resta (num a ; num b) dev num {
+		check (a >5){
+			#a <- a2[2].
+			array(num,2) u <- a3[1].
+			tof w.
+			#w <- ea[2].
+		}
+		othercheck (a<3){
+			falacia <- fols.
+		}
+		other{
+			#a2[1] <- 4.
+		}
+		falacia <- tru.
+		ret 3.
+	}
+}*/
+
+fun startPls () dev num {
+	/*check (a >5){
+			t <- funcion1(a).
+		}
+		other{
+			t <- 4.
+			readnum().
+			printdec(4'5).
+		}*/
+
+	#clase j.
+	#num a <- j-->resta(1;2).
+	tof f <- fols.
+	tof s <- f.
+	ret 0.
+}
+fun suma (num a ; num b) dev num {
+	#nombreRegistro p <- {tru, 3}.
+	#nombreRegjstro p.
+	array(num,2) q <- [2,3].
+	array(num,3,2) w <- [[3,4],[2,3],[4,3]].
+	#a r <- [2,3].
+	book -> num punterio.
+	#-> punterio <- 5.
+	cycle (num i <-0 ,i < 5 , i<-i + 1 , i neq 3){
+		cycle (num j<-0 ,j<5 , j<-j + 1){
+			num k <-0.
+			during (k<5 , k neq 3){}
+		}
+
+	}	
+	ret a+b.
+}

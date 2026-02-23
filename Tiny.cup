@@ -1,0 +1,424 @@
+package asint;
+
+
+import java_cup.runtime.*;
+import alex.TokenValue;
+import alex.AnalizadorLexicoTiny;
+import alex.UnidadLexica;
+import errors.GestionErroresTiny;
+import ast.instrucciones.*;
+import ast.expresiones.*;
+import ast.tipo.*;
+import ast.instrucciones.declaraciones.*;
+import ast.Programa;
+import ast.NodeKind;
+import ast.Parametro;
+import ast.ASTNode;
+import ast.KindAsig;
+import java.util.List;
+import java.util.ArrayList;
+import ast.ParametroArray;
+
+scan with {: return getScanner().next_token(); :};
+parser code {: 
+   private GestionErroresTiny errores;
+   public void syntax_error(Symbol unidadLexica) {
+     errores.errorSintactico((UnidadLexica)unidadLexica);
+   }
+:};
+init with {: 
+   errores = new GestionErroresTiny();
+   AnalizadorLexicoTiny alex = (AnalizadorLexicoTiny)getScanner();
+   alex.fijaGestionErrores(errores);
+:};
+
+terminal TOF, FUN, SUMA, RESTA, MULTIPLICACION, DIVISION, MODULO, IGUAL, DIFERENTE, MENOR_IGUAL, MAYOR_IGUAL, MENOR, MAYOR, AND, OR, NOT, ASIGNACION, PUNTERO, LLAVE_APERTURA, LLAVE_CIERRE, PARENTESIS_APERTURA, PARENTESIS_CIERRE, CORCHETE_APERTURA, CORCHETE_CIERRE, PUNTO, COMA, FINAL, DEV, RET, CHECK, OTHER_CHECK, OTHER, CYCLE, DURING, ENTITY, REF, BOOK, UNBOOK, NOTHING, STARTPLS, ARRAY, REG, INTERROGACION, NUM, DEC, PUNTOCOMA, CONSTRUCTOR, ACCESOCAMPO, TYPEDEF, DOSPUNTOSIGUAL;
+
+terminal TokenValue IDEN, NUMERO_ENTERO, NUMERO_DECIMAL, TRU, FOLS, READNUM, READDEC, PRINTNUM,
+PRINTDEC, READTOF, PRINTTOF, TODEC, TONUM;
+
+/*non terminal  CLASE, E0, E1, E2, E3, E4, E5, E6, E7, E8, OP0, OP2, OP3, OP4, OP5, TYPE, LISTACREACION, TYPE_ARRAY, LISTATAMANYOS, CREACIONASIG, ASIGNACIONARRAY, LISTACONTENIDOARRAY, LISTAARRAY, CONSTANTE, FUNCONSTRUCTOR, PARAMS, PARAM, LISTA_INICIALIZACIONES, FUNDEF, INICIALIZACION, FUNTYPE, LISTACUERPO, BODY, FUNSTARTPLS, CONDICIONAL, CHECKCOND, OTHERCHECKCOND,LISTAOTHERCHECK, OTHERCOND, CALL, ARGS, PRINT, READ, BUCLE, INIT, LISTACONTENIDOREG, TIPO, DECLARACIONTYPEDEF, DECINICIALES, DECFINAL;*/
+
+non terminal  Programa S;
+non terminal List<Instruccion> LDs;
+non terminal Entity CLASE;
+non terminal Expresion E0, E1, E2, E3, E4, E5, E6, E7, E8;
+non terminal KindAsig OP0, OP2, OP3, OP4, OP5;
+
+non terminal Tipo TYPE;
+non terminal List<Creacion> LISTACREACION;
+non terminal TipoArray TYPE_ARRAY;
+non terminal List<Num> LISTATAMANYOS;
+non terminal Creacion CREACION; 
+non terminal Creacion CREACIONGLOBAL; 
+non terminal CreacionAsig CREACIONASIG;
+non terminal CreacionAsig CREACIONASIGGLOBAL;
+non terminal ExpresionArray ASIGNACIONARRAY;
+non terminal ExpresionArray LISTACONTENIDOARRAY;
+non terminal ExpresionArray LISTAARRAY;
+non terminal Constante CONSTANTE;
+non terminal Constructo FUNCONSTRUCTOR;
+non terminal List<Parametro> PARAMS;
+non terminal Parametro PARAM;
+non terminal List<Inicializacion> LISTA_INICIALIZACIONES; 
+non terminal Funcion FUNDEF; 
+non terminal Inicializacion INICIALIZACION; 
+non terminal Tipo FUNTYPE;
+non terminal List<Instruccion> LISTACUERPO;
+non terminal List<Instruccion> BODY;
+non terminal Funcion FUNSTARTPLS;
+non terminal Condicional CONDICIONAL;
+non terminal Check CHECKCOND;
+non terminal Othercheck OTHERCHECKCOND;
+non terminal List<Othercheck> LISTAOTHERCHECK;
+non terminal Other OTHERCOND;
+non terminal Call CALL;
+non terminal List<Expresion> ARGS;
+non terminal String PRINT;
+non terminal String READ;
+non terminal Bucle BUCLE;
+non terminal Declaracion INIT; 
+non terminal ExpresionRegistro LISTACONTENIDOREG;
+non terminal Tipo TIPO; 
+non terminal Typedef DECLARACIONTYPEDEF;
+non terminal List<Declaracion> DECINICIALES;
+non terminal List<Funcion> LISTAFUNDEF;
+non terminal Declaracion DECFINAL;
+non terminal List<Typedef> DECTYPEDEFS;
+non terminal Registro CREACIONREG;
+
+
+
+
+S ::= DECINICIALES:deciniciales DECTYPEDEFS:typedefs LDs:lds
+{: RESULT = new Programa(deciniciales, typedefs, lds); :};
+
+DECTYPEDEFS ::= DECLARACIONTYPEDEF:dec  DECTYPEDEFS:listaDec  {: listaDec.add(0, dec); RESULT =listaDec; :} 
+| {: RESULT =new ArrayList<Typedef>(); :} ;
+
+DECINICIALES ::= DECFINAL:dec DECINICIALES: listaDec  {: listaDec.add(0, dec); RESULT =listaDec; :}
+| {: RESULT =new ArrayList<Declaracion>(); :} ;
+
+DECLARACIONTYPEDEF ::= TYPEDEF IDEN:nombre DOSPUNTOSIGUAL TIPO:tipo PUNTO {: RESULT =new Typedef(nombre.lexema, tipo); :};
+
+TIPO ::= TYPE:tipo {: RESULT =tipo; :}
+//|IDEN:iden {: RESULT = new TipoPersonalizado(iden.lexema); :} 
+|TYPE_ARRAY:array {: RESULT = array; :} 
+|PUNTERO TYPE:tipo {: RESULT = new TipoPuntero(tipo); :}  
+//|PUNTERO IDEN:iden {: RESULT = new TipoPuntero(new TipoPersonalizado(iden.lexema)); :} 
+|PUNTERO TYPE_ARRAY:array {: RESULT = new TipoPuntero(array); :};
+
+CLASE ::= ENTITY IDEN:iden LLAVE_APERTURA LISTACREACION:lcreacion FUNCONSTRUCTOR:constructor LISTAFUNDEF:listafundef LLAVE_CIERRE
+{: RESULT = new Entity(iden.lexema, lcreacion, constructor, listafundef); :};
+
+DECFINAL ::= FINAL TYPE:tipo IDEN:identificador ASIGNACION E0:exp0 PUNTO {: RESULT = new CreacionAsig(tipo,identificador.lexema,exp0, false, true); :};
+
+FUNCONSTRUCTOR ::= CONSTRUCTOR PARENTESIS_APERTURA PARAMS:params PARENTESIS_CIERRE LLAVE_APERTURA LISTA_INICIALIZACIONES:lista LLAVE_CIERRE{: RESULT = new Constructo(params, lista); :};
+
+LDs ::= CLASE:clase LDs:lds
+{: lds.add(0, clase); RESULT =lds; :}
+|CREACIONGLOBAL:c PUNTO LDs:lds  
+{: lds.add(0, c); RESULT =lds; :} 
+|CREACIONREG:c PUNTO LDs:lds
+{: lds.add(0, c); RESULT =lds; :} 
+|CREACIONASIGGLOBAL:ca PUNTO LDs:lds  
+{: lds.add(0, ca); RESULT =lds; :}
+|FUNDEF:fun LDs:lds {: lds.add(0, fun); RESULT =lds; :} 
+|FUNSTARTPLS:startpls LDs:lds 
+{: lds.add(0, startpls); RESULT =lds; :} 
+|{: RESULT =new ArrayList<Instruccion>(); :};
+
+INICIALIZACION ::= E0:exp0 ASIGNACION ASIGNACIONARRAY:asignacionarray {:RESULT= new Inicializacion(exp0, asignacionarray);:} 
+| E0:exp0 ASIGNACION E0:exp1 {:RESULT= new Inicializacion(exp0, exp1);:}
+| E0:exp0 ASIGNACION LLAVE_APERTURA LISTACONTENIDOREG:lista LLAVE_CIERRE {:RESULT= new Inicializacion(exp0, lista);:};
+
+LISTA_INICIALIZACIONES ::= INICIALIZACION:ini PUNTO LISTA_INICIALIZACIONES:listaini  {:listaini.add(0, ini); RESULT =listaini; :}
+|{: RESULT = new ArrayList<Inicializacion> (); :};
+
+CREACION ::= BOOK PUNTERO TYPE:tipo IDEN:iden 
+{: RESULT =new Book(tipo, iden.lexema); :}| 
+BOOK PUNTERO TYPE_ARRAY:tipo IDEN:iden 
+{: RESULT =new Book(tipo, iden.lexema); :} | 
+TYPE:tipo IDEN:iden 
+{: RESULT =new Creacion(tipo, iden.lexema); :}| 
+TYPE_ARRAY:tipo IDEN:iden 
+{: RESULT =new Creacion(tipo, iden.lexema); :};
+
+CREACIONGLOBAL ::= //BOOK PUNTERO TYPE:tipo IDEN:iden 
+//{: RESULT =new Book(tipo, iden.lexema); :}| 
+//BOOK PUNTERO TYPE_ARRAY:tipo IDEN:iden 
+//{: RESULT =new Book(tipo, iden.lexema); :} | 
+TYPE:tipo IDEN:iden 
+{: RESULT =new Creacion(tipo, iden.lexema, true); :}| 
+TYPE_ARRAY:tipo IDEN:iden 
+{: RESULT =new Creacion(tipo, iden.lexema, true); :};
+
+CREACIONREG ::= REG IDEN:iden LLAVE_APERTURA LISTACREACION:camposReg LLAVE_CIERRE 
+{: RESULT =new Registro(iden.lexema, camposReg); :};
+
+LISTACREACION ::= CREACION:creacion PUNTO LISTACREACION:listaCreacion  {: listaCreacion.add(0, creacion); RESULT =listaCreacion; :} 
+| CREACIONASIG:creacionAsig PUNTO LISTACREACION:listaCreacion {: listaCreacion.add(0, creacionAsig); RESULT =listaCreacion; :} 
+| {: RESULT =new ArrayList<Creacion>() ; :};
+
+CREACIONASIG ::= BOOK PUNTERO TYPE:tipo IDEN:iden ASIGNACION E0:exp0
+{: RESULT = new BookAsig(tipo, iden.lexema, exp0); :}
+| BOOK PUNTERO TYPE_ARRAY:tipo IDEN:iden ASIGNACION ASIGNACIONARRAY:asignacionarray 
+{: RESULT = new BookAsig(tipo, iden.lexema, asignacionarray); :}
+| TYPE:tipo IDEN:iden ASIGNACION E0:exp0 
+{: RESULT = new CreacionAsig(tipo, iden.lexema, exp0, true); :}
+| TYPE_ARRAY:type IDEN:iden ASIGNACION ASIGNACIONARRAY:contenido
+{: RESULT = new CreacionAsig(type, iden.lexema, contenido, true); :}
+| TYPE_ARRAY:type IDEN:iden ASIGNACION E0:contenido
+{: RESULT = new CreacionAsig(type, iden.lexema, contenido, true); :}
+| TYPE:type IDEN:iden ASIGNACION ASIGNACIONARRAY:contenido
+{: RESULT = new CreacionAsig(type, iden.lexema, contenido, true); :}
+| BOOK PUNTERO TYPE:tipo IDEN:iden ASIGNACION LLAVE_APERTURA LISTACONTENIDOREG:cont LLAVE_CIERRE
+{: RESULT = new BookAsig(tipo, iden.lexema, cont); :}
+| TYPE:tipo IDEN:iden ASIGNACION LLAVE_APERTURA LISTACONTENIDOREG:cont LLAVE_CIERRE
+{: RESULT = new CreacionAsig(tipo, iden.lexema, cont, true); :}; //falta book del registro
+
+CREACIONASIGGLOBAL ::= //BOOK PUNTERO TYPE:tipo IDEN:iden ASIGNACION E0:exp0
+//{: RESULT = new BookAsig(tipo, iden.lexema, exp0); :}
+//| BOOK PUNTERO TYPE_ARRAY:tipo IDEN:iden ASIGNACION ASIGNACIONARRAY:asignacionarray 
+//{: RESULT = new BookAsig(tipo, iden.lexema, asignacionarray); :}
+| TYPE:tipo IDEN:iden ASIGNACION E0:exp0 
+{: RESULT = new CreacionAsig(tipo, iden.lexema, exp0, true, true); :}
+| TYPE_ARRAY:type IDEN:iden ASIGNACION ASIGNACIONARRAY:contenido
+{: RESULT = new CreacionAsig(type, iden.lexema, contenido, true, true); :}
+| TYPE_ARRAY:type IDEN:iden ASIGNACION E0:contenido
+{: RESULT = new CreacionAsig(type, iden.lexema, contenido, true, true); :}
+| TYPE:type IDEN:iden ASIGNACION ASIGNACIONARRAY:contenido
+{: RESULT = new CreacionAsig(type, iden.lexema, contenido, true, true); :}
+//| BOOK PUNTERO TYPE:tipo IDEN:iden ASIGNACION LLAVE_APERTURA LISTACONTENIDOREG:cont LLAVE_CIERRE
+//{: RESULT = new BookAsig(tipo, iden.lexema, cont); :}
+| TYPE:tipo IDEN:iden ASIGNACION LLAVE_APERTURA LISTACONTENIDOREG:cont LLAVE_CIERRE
+{: RESULT = new CreacionAsig(tipo, iden.lexema, cont, true, true); :}; //falta book del registro
+
+
+LISTACONTENIDOREG::= E0:exp0 COMA LISTACONTENIDOREG:listacontenido 
+{:listacontenido.add(0, exp0); RESULT=listacontenido;:}
+|E0:exp0 
+{: ExpresionRegistro listacontenido=new ExpresionRegistro(); listacontenido.add(0, exp0);RESULT= listacontenido;:} 
+|
+{: RESULT= new ExpresionRegistro();:}; 
+
+TYPE_ARRAY ::= ARRAY PARENTESIS_APERTURA TYPE:tipo COMA LISTATAMANYOS:tamanitos PARENTESIS_CIERRE 
+{:RESULT= new TipoArray(tipo,tamanitos);:};
+
+LISTATAMANYOS ::= LISTATAMANYOS:listatamanios COMA NUMERO_ENTERO:n {:listatamanios.add(new Num(n.lexema)); RESULT= listatamanios;:} 
+| NUMERO_ENTERO:n 
+{: List<Num> listatamanios= new ArrayList<Num>(); listatamanios.add(new Num(n.lexema)); RESULT= listatamanios;:};
+
+ASIGNACIONARRAY ::= CORCHETE_APERTURA LISTACONTENIDOARRAY:listacontenido CORCHETE_CIERRE {:RESULT= listacontenido;:}|CORCHETE_APERTURA LISTAARRAY:listaarray CORCHETE_CIERRE {:RESULT= listaarray;:};
+
+LISTACONTENIDOARRAY ::= LISTACONTENIDOARRAY: listacontenidoarray COMA E0:exp0 {: if (exp0 != null) listacontenidoarray.add(exp0); RESULT= listacontenidoarray;:}
+| E0:exp0 {: ExpresionArray listacontenidoarray= new ExpresionArray();   if (exp0 != null)
+listacontenidoarray.add(exp0); RESULT= listacontenidoarray;:}
+|LISTACONTENIDOARRAY:listacontenidoarray COMA ASIGNACIONARRAY:interior {: if (interior != null) listacontenidoarray.add(interior); RESULT= listacontenidoarray;:}
+|ASIGNACIONARRAY:interior {: ExpresionArray lista=new ExpresionArray(); if (interior != null) lista.add(interior); RESULT= lista;:}
+| {: RESULT= new ExpresionArray(); :} ; 
+
+FUNSTARTPLS ::= FUN STARTPLS PARENTESIS_APERTURA PARENTESIS_CIERRE DEV NUM LLAVE_APERTURA BODY:cuerpo LLAVE_CIERRE  {: RESULT = new Funcion("startPls", new ArrayList<Parametro>(), new TipoBasico(TipoDeTipo.NUM),cuerpo); :};
+
+FUNDEF ::= FUN IDEN:nombreFun PARENTESIS_APERTURA PARAMS:listaParametros PARENTESIS_CIERRE DEV FUNTYPE:tipoFuncion LLAVE_APERTURA BODY:cuerpo LLAVE_CIERRE  {: RESULT = new Funcion(nombreFun.lexema, listaParametros, tipoFuncion, cuerpo); :};
+
+LISTAFUNDEF ::= FUNDEF:fun LISTAFUNDEF:lista {: lista.add(0, fun); RESULT = lista; :}
+| {: RESULT = new ArrayList<Funcion>(); :};
+
+BODY ::= LISTACUERPO:listaCuerpo RET E0:dev PUNTO  {: listaCuerpo.add(new Return(dev)); RESULT = listaCuerpo; :} 
+|LISTACUERPO:listaCuerpo  {: RESULT = listaCuerpo; :};
+
+LISTACUERPO ::= E0:instruccion PUNTO LISTACUERPO:listaInstrucciones  {: listaInstrucciones.add(0, instruccion); RESULT = listaInstrucciones; :} 
+| INICIALIZACION:instruccion PUNTO LISTACUERPO:listaInstrucciones  {: listaInstrucciones.add(0, instruccion); RESULT = listaInstrucciones; :} 
+| CREACION:instruccion PUNTO LISTACUERPO:listaInstrucciones  {: listaInstrucciones.add(0, instruccion); RESULT = listaInstrucciones; :} 
+| CREACIONREG:instruccion PUNTO LISTACUERPO:listaInstrucciones  {: listaInstrucciones.add(0, instruccion); RESULT = listaInstrucciones; :}
+| CREACIONASIG:instruccion PUNTO LISTACUERPO:listaInstrucciones  {: listaInstrucciones.add(0, instruccion); RESULT = listaInstrucciones; :} 
+| BUCLE:instruccion LISTACUERPO:listaInstrucciones  {: listaInstrucciones.add(0, instruccion); RESULT = listaInstrucciones; :}
+| CONDICIONAL:instruccion LISTACUERPO:listaInstrucciones  {: listaInstrucciones.add(0, instruccion); RESULT = listaInstrucciones; :}
+| UNBOOK IDEN:id PUNTO LISTACUERPO:listaInstrucciones {: listaInstrucciones.add(0, new Unbook(id.lexema)); RESULT = listaInstrucciones; :} 
+| {: RESULT = new ArrayList<Instruccion>(); :} ;
+
+FUNTYPE::= TYPE:tipo {: RESULT = tipo; :}
+|NOTHING {: RESULT = new TipoBasico(TipoDeTipo.NOTHING); :}
+|TYPE_ARRAY:array {: RESULT = array; :};
+
+TYPE ::= NUM 
+{: RESULT = new TipoBasico(TipoDeTipo.NUM); :}
+| DEC 
+{: RESULT = new TipoBasico(TipoDeTipo.DEC); :}
+| TOF 
+{: RESULT = new TipoBasico(TipoDeTipo.TOF); :}
+| IDEN:iden
+{: RESULT = new TipoPersonalizado(iden.lexema); :};
+
+
+E0 ::= E0:exp0 OP0:op0 E1:exp1
+{: RESULT = new ExpBinaria(exp0, exp1, op0); :}
+ | E1:exp1
+{: RESULT = exp1; :};
+
+E1 ::= NOT E1:exp1
+{: RESULT = new ExpUnitaria(exp1, KindAsig.NOT); :}
+ | E2:exp2
+{: RESULT = exp2; :};
+
+E2 ::= E2:exp2 OP2:op2 E3:exp3
+{: RESULT = new ExpBinaria(exp2,exp3,op2); :}
+ | E3:exp3
+{: RESULT = exp3; :};
+
+E3 ::= E3:exp3 OP3:op3 E4:exp4
+{: RESULT = new ExpBinaria(exp3, exp4, op3); :}
+ | E4:exp4
+{: RESULT = exp4; :};
+
+E4 ::= E4:exp4 OP4:op4 E5:exp5
+{: RESULT = new ExpBinaria(exp4,exp5,op4); :}
+ | E5:exp5
+{: RESULT = exp5; :};
+
+E5 ::= E5:exp5 OP5:op5 E6:exp6
+{: RESULT = new ExpBinaria(exp5,exp6,op5); :}
+ | E6:exp6
+{: RESULT = exp6; :};
+
+E6 ::= PUNTERO E7:exp7
+{: RESULT = new ExpUnitaria(exp7, KindAsig.PUNTERO); :}
+ | INTERROGACION E7:exp7 
+{: RESULT = new ExpUnitaria(exp7, KindAsig.INTERROGACION); :}
+| E7:exp7
+{: RESULT = exp7; :};
+
+
+E7 ::= E7:exp7 ACCESOCAMPO E8:exp8
+{: RESULT = new ExpBinaria(exp7,exp8, KindAsig.ACCESO); :}
+ | E8:exp8
+{: RESULT= exp8; :};
+
+E8 ::= CONSTANTE:constante
+{: RESULT = constante; :}
+ | IDEN:iden
+{: RESULT = new Unitario(iden.lexema); :}
+| CALL:call
+{: RESULT = new Unitario(call); :}
+ | PARENTESIS_APERTURA E0:exp0 PARENTESIS_CIERRE
+{: RESULT = new ExpUnitaria(exp0, KindAsig.PARENTESIS); :} 
+| E8:exp8 CORCHETE_APERTURA E0:exp0 CORCHETE_CIERRE
+{: RESULT = new ExpAccesoArray(exp8, exp0); :};
+//| E0:obj ACCESOCAMPO IDEN:metodo PARENTESIS_APERTURA ARGS:args PARENTESIS_CIERRE
+//{: RESULT = new Unitario(new Call(metodo.lexema, obj, args)); :};
+
+OP0 ::= AND 
+{: RESULT = KindAsig.AND; :}
+| OR
+{: RESULT = KindAsig.OR; :};
+
+OP2 ::= IGUAL
+{: RESULT = KindAsig.EQ; :}
+ | DIFERENTE
+{: RESULT = KindAsig.NEQ; :};
+
+OP3 ::= MENOR
+{: RESULT = KindAsig.MENOR; :}
+ | MENOR_IGUAL 
+{: RESULT = KindAsig.MENOR_IGUAL; :}
+| MAYOR 
+{: RESULT = KindAsig.MAYOR; :}
+| MAYOR_IGUAL
+{: RESULT = KindAsig.MAYOR_IGUAL; :};
+
+OP4 ::= SUMA
+{: RESULT = KindAsig.MAS; :}
+ | RESTA
+{: RESULT = KindAsig.MENOS; :};
+
+OP5 ::= MULTIPLICACION
+{: RESULT = KindAsig.POR; :}
+ | DIVISION 
+{: RESULT = KindAsig.DIV; :}
+| MODULO
+{: RESULT = KindAsig.MOD; :};
+
+CONSTANTE::= NUMERO_ENTERO:ne
+{:RESULT = new Num(ne.lexema); :}
+|NUMERO_DECIMAL:nd
+{:RESULT = new Dec(nd.lexema); :}
+|TRU
+{:RESULT = new Tof("tru"); :}
+|FOLS
+{:RESULT = new Tof("fols"); :};
+
+PARAMS ::= PARAMS:params PUNTOCOMA PARAM:p 
+{: params.add(p); RESULT = params; :}
+| PARAM:p
+{: ArrayList<Parametro> lista = new ArrayList<Parametro>(); lista.add(p); RESULT = lista; :}
+| 
+{:RESULT =new ArrayList<Parametro>(); :} ;
+
+PARAM ::= TYPE:tipo IDEN:iden
+{: RESULT = new Parametro(tipo, iden.lexema, false); :}
+| TYPE:tipo REF IDEN:iden 
+{: RESULT = new Parametro(tipo, iden.lexema, true); :}
+| TYPE_ARRAY:tipo IDEN:iden
+{: RESULT = new ParametroArray(tipo, iden.lexema, false); :}
+| TYPE_ARRAY:tipo REF IDEN:iden
+{: RESULT = new ParametroArray(tipo, iden.lexema, true); :};
+
+CONDICIONAL ::= CHECKCOND:condicion LISTAOTHERCHECK:listaotras  {: RESULT = new Condicional(condicion, listaotras); :}
+|CHECKCOND:condicion LISTAOTHERCHECK:listaotras OTHERCOND:otra {: RESULT = new Condicional(condicion, listaotras, otra); :};
+
+CHECKCOND ::=  CHECK PARENTESIS_APERTURA E0:condicion PARENTESIS_CIERRE LLAVE_APERTURA LISTACUERPO:cuerpo LLAVE_CIERRE  {: RESULT = new Check(condicion, cuerpo); :} ​​;
+
+OTHERCHECKCOND ::=  OTHER_CHECK PARENTESIS_APERTURA E0:condicion PARENTESIS_CIERRE LLAVE_APERTURA LISTACUERPO:cuerpo LLAVE_CIERRE  {: RESULT = new Othercheck(condicion, cuerpo); :} ;
+
+OTHERCOND ::= OTHER LLAVE_APERTURA LISTACUERPO:cuerpo LLAVE_CIERRE  {: RESULT = new Other( cuerpo); :} ;
+
+LISTAOTHERCHECK ::= OTHERCHECKCOND:condicion LISTAOTHERCHECK:listacondiciones {: listacondiciones.add(0, condicion); RESULT = listacondiciones; :} 
+| {: RESULT = new ArrayList<Othercheck>(); :};
+
+BUCLE ::= CYCLE PARENTESIS_APERTURA INIT:declaracion COMA E0:condicion COMA INICIALIZACION:paso PARENTESIS_CIERRE LLAVE_APERTURA LISTACUERPO:cuerpo LLAVE_CIERRE {: RESULT = new Cycle(declaracion, condicion, paso, cuerpo); :} 
+| CYCLE PARENTESIS_APERTURA INIT:declaracion COMA E0:condicion COMA INICIALIZACION:paso COMA E0:salto PARENTESIS_CIERRE LLAVE_APERTURA LISTACUERPO:cuerpo LLAVE_CIERRE {: RESULT = new Cycle(declaracion, condicion, paso, salto, cuerpo); :} 
+| DURING PARENTESIS_APERTURA E0:condicion COMA E0:salto PARENTESIS_CIERRE LLAVE_APERTURA LISTACUERPO:cuerpo LLAVE_CIERRE {: RESULT = new During(condicion, salto, cuerpo); :} 
+| DURING PARENTESIS_APERTURA E0:condicion PARENTESIS_CIERRE LLAVE_APERTURA LISTACUERPO:cuerpo LLAVE_CIERRE {: RESULT = new During(condicion, cuerpo); :} ;
+
+INIT ::= INICIALIZACION:ini {: RESULT = ini; :} 
+| CREACIONASIG: c  {: RESULT = c; :};
+
+CALL ::= IDEN:iden PARENTESIS_APERTURA ARGS:argumentos PARENTESIS_CIERRE
+{: RESULT = new Call(iden.lexema, argumentos); :}
+| PRINT:print PARENTESIS_APERTURA E0:exp0 PARENTESIS_CIERRE 
+{: RESULT = new Call(print, exp0); :}
+| READ:read PARENTESIS_APERTURA PARENTESIS_CIERRE 
+{: RESULT = new Call(read, new ArrayList<Expresion>()); :}
+| TODEC:todec PARENTESIS_APERTURA E0:exp0 PARENTESIS_CIERRE 
+{: RESULT = new Call(todec.lexema,exp0); :}
+| TONUM:tonum PARENTESIS_APERTURA E0:exp0 PARENTESIS_CIERRE
+{: RESULT = new Call(tonum.lexema,exp0); :};
+
+ARGS ::= ARGS:args PUNTOCOMA E0:exp0 
+{: args.add(exp0); RESULT = args; :}
+| E8:exp8
+{: ArrayList<Expresion> list = new ArrayList<Expresion>(); list.add(exp8); RESULT =  list; :} 
+| 
+{: RESULT = new ArrayList<Expresion>(); :} ;
+
+
+PRINT ::= PRINTDEC
+{: RESULT = "printDec"; :}
+ | PRINTNUM:prn
+{: RESULT = "printNum"; :}
+ | PRINTTOF:prtof
+{: RESULT = "printTof"; :};
+
+READ ::= READDEC:rd
+{: RESULT = "readDec"; :} 
+| READNUM:rn
+{: RESULT = "readNum"; :}
+| READTOF:rt
+{: RESULT = "readTof"; :};
+
+
+
+
+
+

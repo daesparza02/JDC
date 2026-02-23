@@ -1,0 +1,22 @@
+
+fun devuelve() dev num {
+	ret 5.
+}
+
+
+fun startPls () dev num {
+	tof b <- tru.
+	num a1 <- 2.
+	num a2 <- 1.
+	num suma <- a1 + a2.
+	num resta <- a1 - a2.
+	num mod <- 17 % 10.
+	num mult <- a1 * a2.
+	num divis <- a1 / a2.
+	num devuelto <- devuelve().
+
+	array(num, 2) a <- [10,20].
+	
+	ret 34.
+}
+

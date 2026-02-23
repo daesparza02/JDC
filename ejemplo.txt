@@ -1,0 +1,59 @@
+
+num t <- 5 + 2.
+tof p.
+dec k.
+#array(num, 3) h <- [1,2,3].
+
+fun startPls() dev num {
+	num x <- 5 + 2.
+	tof z.
+	dec a.
+	#array(num, 3) c <- [1,2,3].
+	ret x.
+}
+
+fun funcioncita(num ref a) dev nothing{
+	num j.
+	cycle(num i <- 0, i < 5, i <- i + 1){
+		check (a > 2){
+			num g <- 0.
+			j <- 3.
+		}
+		othercheck(a eq 2){
+			num g2 <- 0.
+			j <- 2.
+		}
+		other{
+			num g3 <- 0.
+			j <- 1.
+		}
+	}
+	num i <- 0.
+	during(i neq 5){
+		i <- i + 1.
+	}
+	cycle(num i <- 0, i < 5, i <- i + 1, i eq 4){
+		check (a > 2){
+			j <- 3.
+		}
+		othercheck(a eq 2){
+			j <- 2.
+		}
+		other{
+			j <- 1.
+		}
+	}	
+}
+
+fun funcion2(array(num,2) ref b) dev array(num,2){
+	printDec(3'14).
+	printNum(2).
+	printTof(fols).
+	num n <- readNum().
+	num t <- 5.
+	funcioncita(t).
+	ret b.
+}
+
+
+

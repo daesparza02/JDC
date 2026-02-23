@@ -1,0 +1,10 @@
+#FINAL num numerito <- 23.
+#num a .
+fun startPls () dev num {
+	array(num,2) q <- [2,3].
+	#num b <- 3.
+	#tof f <- tru.
+	#num c <- b.
+	#a <- 9.
+	ret 0.
+}

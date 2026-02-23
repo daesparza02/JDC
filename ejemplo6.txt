@@ -1,0 +1,21 @@
+
+fun suma(num a; num b) dev num {
+	num z <-a.
+	ret a + b.
+}
+
+
+fun startPls () dev num {
+	num n <- 3.
+	num resultado <- suma(3; 5).
+	num l1 <- resultado.
+	num l2 <- resultado.
+	num l3 <- resultado.
+	num l4<- 2.
+	num l5 <- 2.
+	num l6 <- 2.
+	num l7<- 2.
+	num l8 <- 2.
+	ret 432.
+}
+
